@@ -2,9 +2,9 @@
 
 Текст выступления для защиты семестровой работы «Анализ бизнес-процессов коммерческой организации» на примере сети кофеен Cofix.
 
-**Сайт:** https://lashatop11-rgb.github.io/cofix-zashchita/
+**Сайт:** https://cofix-zashchita.vercel.app/
 
-Ссылки на текст одного спикера: [1](https://lashatop11-rgb.github.io/cofix-zashchita/#speaker-1) · [2](https://lashatop11-rgb.github.io/cofix-zashchita/#speaker-2) · [3](https://lashatop11-rgb.github.io/cofix-zashchita/#speaker-3) · [4](https://lashatop11-rgb.github.io/cofix-zashchita/#speaker-4) · [5](https://lashatop11-rgb.github.io/cofix-zashchita/#speaker-5)
+Ссылки на текст одного спикера: [1](https://cofix-zashchita.vercel.app/#speaker-1) · [2](https://cofix-zashchita.vercel.app/#speaker-2) · [3](https://cofix-zashchita.vercel.app/#speaker-3) · [4](https://cofix-zashchita.vercel.app/#speaker-4) · [5](https://cofix-zashchita.vercel.app/#speaker-5)
 
 | № | Спикер | Слайды | Тема | Время |
 |---|---|---|---|---|
@@ -26,6 +26,6 @@
 
 ## Как устроено
 
-Один статический файл `index.html` без сборки. Сайт размещён на GitHub Pages и обновляется сам после каждого push в ветку `main`.
+Один статический файл `index.html` без сборки. Сайт размещён на Vercel и обновляется сам после каждого push в ветку `main`.
 
 Чтобы поправить текст, отредактируйте `index.html` и запушьте изменения.
