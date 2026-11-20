@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Выступление по Cofix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&family=Manrope:wght@400..800&display=swap">
+<style>
+/* Layout: тёмная шапка с «эстафетой» из пяти отрезков (ширина отрезка = время спикера); ниже части по спикерам, в каждой строке слайд слева и текст справа; вопросы комиссии сеткой; карточки для репетиции поверх страницы */
+:root{
+  --bg:#F2F5F7; --surface:#FFFFFF; --ink:#0F2537; --soft:#4A5E71; --line:#CFDAE3; --accent:#2346C7;
+  --hl:#DDF59A;
+  --lime:#C8F25A; --on-lime:#0F2537;
+  --band:#0F2537; --band-2:#1D3B56; --band-3:#27496A; --band-line:#3A5874; --on-band:#EAF0F4; --on-band-soft:#A9BBC9;
+  --deck-hl:rgba(200,242,90,.30);
+  --font-text:"Literata", Georgia, "Times New Roman", serif;
+  --font-ui:"Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C1824; --surface:#132433; --ink:#E6EDF2; --soft:#A3B4C3; --line:#24394C; --accent:#8EA6FF;
+    --hl:rgba(200,242,90,.26);
+    --band:#071320; --band-2:#183049; --band-3:#21405F; --band-line:#335070;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C1824; --surface:#132433; --ink:#E6EDF2; --soft:#A3B4C3; --line:#24394C; --accent:#8EA6FF;
+  --hl:rgba(200,242,90,.26);
+  --band:#071320; --band-2:#183049; --band-3:#21405F; --band-line:#335070;
+  color-scheme:dark;
+}
+
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+[hidden]{display:none !important}
+p,h1,h2,h3{margin:0}
+button{font:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.top :focus-visible,.deck :focus-visible{outline-color:var(--lime)}
+
+.wrap{max-width:68rem;margin-inline:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* Шапка */
+.top{background:var(--band);color:var(--on-band)}
+.top .wrap{padding-block:2.5rem 2rem;display:flex;flex-direction:column;gap:1.1rem}
+.eyebrow{font:600 .78rem/1.45 var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--on-band-soft)}
+h1{font:800 clamp(2.1rem,5.5vw,3.6rem)/1.02 var(--font-ui);letter-spacing:-.02em;text-wrap:balance}
+h1 em{font-style:normal;color:var(--lime)}
+.facts{display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;font:500 .95rem/1.4 var(--font-ui);color:var(--on-band-soft)}
+.facts b{color:var(--on-band);font-family:var(--font-mono);font-weight:700;font-variant-numeric:tabular-nums}
+
+.relay{display:flex;gap:6px;margin-top:.6rem}
+.seg{flex:1 1 0;min-width:0;display:flex;align-items:flex-start;gap:.6rem;padding:.8rem .85rem;border:0;border-radius:10px;background:var(--band-2);color:var(--on-band);text-align:left;cursor:pointer;transition:background-color .15s}
+.seg:hover{background:var(--band-3)}
+.seg[aria-pressed="true"]{background:var(--lime);color:var(--on-lime)}
+.seg-num{font:700 1.5rem/1 var(--font-mono)}
+.seg-body{display:flex;flex-direction:column;gap:.2rem;min-width:0}
+.seg-name{font:700 .92rem/1.25 var(--font-ui);overflow-wrap:anywhere}
+.seg-meta{font:500 .78rem/1.3 var(--font-mono);color:var(--on-band-soft);font-variant-numeric:tabular-nums}
+.seg[aria-pressed="true"] .seg-meta{color:var(--on-lime)}
+.hint{font-size:.9rem;color:var(--on-band-soft)}
+.linkbtn{background:none;border:0;padding:0;color:var(--lime);font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+
+.tools{display:flex;flex-wrap:wrap;align-items:flex-start;gap:.75rem 1.25rem;margin-top:.4rem}
+.btn{font:700 .95rem/1.2 var(--font-ui);padding:.75rem 1.15rem;border-radius:999px;border:0;cursor:pointer}
+.btn-lime{background:var(--lime);color:var(--on-lime)}
+.btn-ghost{background:var(--band-2);color:var(--on-band)}
+.btn:disabled{opacity:.45;cursor:default}
+
+/* Части выступления */
+main .wrap{padding-block:.5rem 1rem}
+.part{padding-block:2.25rem .5rem}
+.part + .part{border-top:2px solid var(--ink)}
+.part-head{display:flex;flex-wrap:wrap;align-items:center;gap:1rem 1.25rem;padding-bottom:1rem}
+.part-num{flex:none;width:3.5rem;height:3.5rem;display:grid;place-items:center;border-radius:12px;background:var(--lime);color:var(--on-lime);font:700 1.6rem/1 var(--font-mono)}
+.part-id{display:flex;flex-direction:column;gap:.15rem;min-width:0;flex:1 1 14rem}
+.part-name{font:800 1.5rem/1.15 var(--font-ui);overflow-wrap:anywhere}
+.part-scope{color:var(--soft);font-weight:500}
+.part-side{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem}
+.part-time{font:700 1rem/1 var(--font-mono);font-variant-numeric:tabular-nums}
+.copy{font:700 .88rem/1.2 var(--font-ui);padding:.55rem .95rem;border-radius:999px;border:1.5px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.copy:hover{border-color:var(--accent);color:var(--accent)}
+
+.cue{display:grid;grid-template-columns:minmax(0,13rem) minmax(0,1fr);gap:.75rem 2.5rem;padding-block:1.6rem;border-top:1px solid var(--line)}
+.cue-side{display:flex;flex-direction:column;gap:.35rem;min-width:0}
+.cue-no{font:700 .8rem/1.2 var(--font-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
+.cue-title{font:700 1.05rem/1.3 var(--font-ui);text-wrap:balance}
+.cue-tip{font:500 .88rem/1.45 var(--font-ui);color:var(--soft);margin-top:.4rem}
+.cue-tip::before{content:"Подсказка";display:block;font:700 .68rem/1.5 var(--font-ui);letter-spacing:.09em;text-transform:uppercase}
+.text{display:flex;flex-direction:column;gap:.8rem;min-width:0}
+.text p{font:400 1.17rem/1.62 var(--font-text);max-width:62ch}
+.text b{font-weight:650}
+mark{color:inherit;padding:0 .08em;-webkit-box-decoration-break:clone;box-decoration-break:clone;background:linear-gradient(180deg,transparent 52%,var(--hl) 52%)}
+.pass{font-style:italic}
+@media (max-width:720px){
+  .cue{grid-template-columns:minmax(0,1fr)}
+  .cue-side{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:.3rem .75rem}
+  .cue-tip{flex-basis:100%;margin-top:.1rem}
+  .text p{font-size:1.1rem}
+}
+@media (max-width:640px){
+  .seg{flex-grow:1 !important;flex-direction:column;gap:.35rem;padding:.65rem .5rem}
+  .seg-name{display:none}
+}
+
+/* Вопросы */
+.qa-sec{padding-block:2.75rem 1rem;border-top:2px solid var(--ink);display:flex;flex-direction:column;gap:.6rem}
+.qa-sec h2{font:800 1.6rem/1.2 var(--font-ui)}
+.qa-lead{color:var(--soft);max-width:62ch}
+.qa{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,21rem),1fr));gap:1rem;margin-top:1rem}
+.qa-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.2rem 1.3rem;display:flex;flex-direction:column;gap:.6rem;min-width:0}
+.qa-card.mine{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.q{font:700 1.05rem/1.35 var(--font-ui)}
+.a{font:400 1rem/1.58 var(--font-text)}
+.who{font:600 .8rem/1.4 var(--font-mono);color:var(--accent);margin-top:auto;padding-top:.2rem}
+
+.foot{margin-top:2rem;padding-block:1.5rem 3rem;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:.45rem;color:var(--soft);font-size:.92rem}
+.foot a{color:var(--accent);font-weight:700}
+
+/* Карточки для репетиции */
+.deck{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;gap:1rem;background:var(--band);color:var(--on-band);
+  padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.deck-bar,.deck-nav{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;width:100%;max-width:60rem;margin-inline:auto}
+.deck-who{font:700 1rem/1.3 var(--font-ui);flex:1 1 12rem;min-width:0;overflow-wrap:anywhere}
+.deck-clock{font:700 1.1rem/1 var(--font-mono);color:var(--lime);font-variant-numeric:tabular-nums}
+.deck-clock span{color:var(--on-band-soft);font-weight:500}
+.dbtn{font:700 .88rem/1.2 var(--font-ui);padding:.55rem .95rem;border-radius:999px;border:1px solid var(--band-line);background:transparent;color:var(--on-band);cursor:pointer}
+.deck-main{flex:1;min-height:0;overflow-y:auto;display:flex}
+.deck-inner{margin:auto;width:100%;max-width:48rem;display:flex;flex-direction:column;gap:1rem;padding-block:1rem}
+.deck-slide{font:700 .9rem/1.3 var(--font-mono);letter-spacing:.03em;color:var(--lime)}
+.deck-text{display:flex;flex-direction:column;gap:1rem}
+.deck-text p{font:400 clamp(1.3rem,2.5vw,1.9rem)/1.5 var(--font-text)}
+.deck-text b{font-weight:650}
+.deck-text mark{background:linear-gradient(180deg,transparent 52%,var(--deck-hl) 52%)}
+.deck-tip{font:500 .95rem/1.45 var(--font-ui);color:var(--on-band-soft)}
+.deck-nav{justify-content:space-between}
+.deck-nav .btn{min-width:7.5rem}
+.deck-pos{font:700 1rem/1 var(--font-mono);color:var(--on-band-soft)}
+
+@media (prefers-reduced-motion: reduce){ *{transition:none !important;scroll-behavior:auto !important} }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">Защита семестровой работы · Анализ бизнес-процессов коммерческой организации</p>
+    <h1>Выступление по <em>Cofix</em></h1>
+    <p class="facts"><span><b>5</b> спикеров</span><span><b>12</b> слайдов с текстом</span><span>общее время <b id="total">≈ 8:16</b></span><span>по требованиям <b>7–10</b> минут</span></p>
+
+    <nav class="relay" aria-label="Части выступления">
+      <button class="seg" type="button" data-sp="1" aria-pressed="false" style="flex-grow:112"><span class="seg-num">1</span><span class="seg-body"><span class="seg-name nm" data-sp="1">Алсу Л</span><span class="seg-meta">сл. 1–3 · <span class="seg-t">1:52</span></span></span></button>
+      <button class="seg" type="button" data-sp="2" aria-pressed="false" style="flex-grow:92"><span class="seg-num">2</span><span class="seg-body"><span class="seg-name nm" data-sp="2">Алсу Б</span><span class="seg-meta">сл. 4–5 · <span class="seg-t">1:32</span></span></span></button>
+      <button class="seg" type="button" data-sp="3" aria-pressed="false" style="flex-grow:108"><span class="seg-num">3</span><span class="seg-body"><span class="seg-name nm" data-sp="3">Вика</span><span class="seg-meta">сл. 6–8 · <span class="seg-t">1:48</span></span></span></button>
+      <button class="seg" type="button" data-sp="4" aria-pressed="false" style="flex-grow:114"><span class="seg-num">4</span><span class="seg-body"><span class="seg-name nm" data-sp="4">Женя</span><span class="seg-meta">сл. 9–10 · <span class="seg-t">1:54</span></span></span></button>
+      <button class="seg" type="button" data-sp="5" aria-pressed="false" style="flex-grow:70"><span class="seg-num">5</span><span class="seg-body"><span class="seg-name nm" data-sp="5">Маша</span><span class="seg-meta">сл. 11–12 · <span class="seg-t">1:10</span></span></span></button>
+    </nav>
+    <p class="hint" id="hint">Нажмите на свою часть, чтобы оставить на странице только её текст.</p>
+    <p class="hint" id="filterNote" hidden>Показана одна часть выступления. <button class="linkbtn" type="button" id="showAll">Показать всё</button></p>
+
+    <div class="tools">
+      <button class="btn btn-lime" type="button" id="openDeck">Карточки для репетиции</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <!-- Спикер 1 -->
+    <section class="part" data-sp="1" aria-labelledby="pn-1">
+      <div class="part-head">
+        <p class="part-num" aria-hidden="true">1</p>
+        <div class="part-id"><h2 class="part-name nm" id="pn-1" data-sp="1">Алсу Л</h2><p class="part-scope">Слайды 1–3 · вступление, история, география</p></div>
+        <div class="part-side"><p class="part-time">≈ 1:52</p><button class="copy" type="button">Скопировать текст</button></div>
+      </div>
+      <div class="cues">
+        <article class="cue" data-slide="1">
+          <div class="cue-side"><p class="cue-no">Слайд 1</p><p class="cue-title">Обложка и содержание</p><p class="cue-tip">Начинайте, когда на экране обложка. На словах о плане можно показать на блок «Содержание» справа.</p></div>
+          <div class="text">
+            <p>Здравствуйте! Мы представляем работу «Анализ бизнес-процессов коммерческой организации» на примере сети кофеен Cofix.</p>
+            <p>Сначала мы опишем компанию. Потом построим её цепочку ценностей по Портеру, разложим процесс поставок зерна на процедуры и покажем одну процедуру в нотации IDEF0.</p>
+          </div>
+        </article>
+        <article class="cue" data-slide="2">
+          <div class="cue-side"><p class="cue-no">Слайд 2</p><p class="cue-title">История и наименование</p><p class="cue-tip">Ведите рукой по шкале слева направо, от 2013 к 2026 году.</p></div>
+          <div class="text">
+            <p>В России сетью управляет <b>ООО «Урбан Кофикс Раша»</b>, головной офис находится в Москве. Сам бренд появился в Израиле в <b>2013</b> году, его основали Ави Кац и Бенни Паркаш. Идея бренда — кофейня «одной цены»: всё меню по одной доступной цене.</p>
+            <p>Первая российская кофейня открылась в <b>2016</b> году в торговом центре «Охотный Ряд». В <b>2021</b> году сеть открыла двухсотую точку и собственное обжарочное производство, а в <b>2023</b>-м — фабрику-кухню в Петербурге. В <b>2025</b> году Cofix отказался от единой цены и запустил кафе-пекарни Cofix bakery.</p>
+            <p>Сейчас в России <b>285&nbsp;кофеен</b>, а новым партнёром сети стал «Бумеранг Капитал». Получается, что Cofix постепенно уходит из сегмента жёстких дискаунтеров.</p>
+          </div>
+        </article>
+        <article class="cue" data-slide="3">
+          <div class="cue-side"><p class="cue-no">Слайд 3</p><p class="cue-title">Где работает Cofix</p><p class="cue-tip">Сначала города слева, потом подразделения справа, сверху вниз.</p></div>
+          <div class="text">
+            <p>Больше всего кофеен в Москве и Подмосковье. Есть точки в Петербурге, Екатеринбурге, Нижнем Новгороде, Иркутске и других городах. Группа Cofix Global работает в <b>пяти странах</b>: кроме России, это Армения, Беларусь, Казахстан и Узбекистан. В Израиле сеть развивает отдельная компания, Cofix Group.</p>
+            <p>Справа подразделения. Головной офис в Москве управляет всей сетью. Обжарочный цех в Краснознаменске выпускает <b>50–55&nbsp;тонн</b> зерна в месяц. Фабрика-кухня в Петербурге делает около <b>30&nbsp;видов</b> свежей продукции. И сами кофейни: собственные и франчайзинговые.</p>
+            <p class="pass"><mark>Чем занимается Cofix и насколько он крупный, расскажет <span class="nm" data-sp="2">Алсу Б</span>.</mark></p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Спикер 2 -->
+    <section class="part" data-sp="2" aria-labelledby="pn-2">
+      <div class="part-head">
+        <p class="part-num" aria-hidden="true">2</p>
+        <div class="part-id"><h2 class="part-name nm" id="pn-2" data-sp="2">Алсу Б</h2><p class="part-scope">Слайды 4–5 · деятельность и масштаб</p></div>
+        <div class="part-side"><p class="part-time">≈ 1:32</p><button class="copy" type="button">Скопировать текст</button></div>
+      </div>
+      <div class="cues">
+        <article class="cue" data-slide="4">
+          <div class="cue-side"><p class="cue-no">Слайд 4</p><p class="cue-title">Чем занимается Cofix</p><p class="cue-tip">Тёмный слайд из четырёх карточек. Идите по ним по порядку, потом покажите на полосу внизу.</p></div>
+          <div class="text">
+            <p>Cofix работает в отрасли общественного питания. Это сеть кофеен формата «кофе с собой».</p>
+            <p>Продукция — кофейные напитки, чай, холодные и функциональные напитки, а ещё выпечка, сэндвичи и десерты.</p>
+            <p>Услуги — продажа в зале и навынос, программа лояльности в приложении и франчайзинг: предприниматель может открыть свою кофейню под брендом Cofix.</p>
+            <p>Форматы разные: мини-кофейни в торговых центрах, точки на вокзалах и в районных центрах, фитбары в клубах DDX Fitness и кафе-пекарни Cofix bakery.</p>
+            <p>Границы распространения <b>межгосударственные</b>, потому что компания работает в пяти странах.</p>
+          </div>
+        </article>
+        <article class="cue" data-slide="5">
+          <div class="cue-side"><p class="cue-no">Слайд 5</p><p class="cue-title">Насколько крупный Cofix</p><p class="cue-tip">Покажите на нижний столбец, это Cofix. Потом на три цифры справа и на вывод внизу.</p></div>
+          <div class="text">
+            <p>Теперь о масштабе. На графике крупнейшие сети кофеен России по числу точек. Первое место у Coffee Like, это примерно тысяча кофеен. Дальше идут One Price Coffee и Surf Coffee. Cofix на <b>четвёртом месте</b>, у него 285 кофеен. Цифры по конкурентам приблизительные, это оценка экспертов рынка из журнала «Профиль».</p>
+            <p>Справа финансы. Выручка ООО «Урбан Кофикс Раша» за 2025 год — <b>3,01&nbsp;миллиарда рублей</b>, чистая прибыль — <b>68,1&nbsp;миллиона</b>. А всего в мире у бренда больше 400 кофеен.</p>
+            <p>В России средний бизнес — это выручка до 2 миллиардов рублей в год. Cofix этот порог превышает, поэтому мы относим его к <b>крупным предприятиям</b>.</p>
+            <p class="pass"><mark>Как Cofix создаёт ценность для клиента, расскажет <span class="nm" data-sp="3">Вика</span>.</mark></p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Спикер 3 -->
+    <section class="part" data-sp="3" aria-labelledby="pn-3">
+      <div class="part-head">
+        <p class="part-num" aria-hidden="true">3</p>
+        <div class="part-id"><h2 class="part-name nm" id="pn-3" data-sp="3">Вика</h2><p class="part-scope">Слайды 6–8 · цепочка ценностей Портера</p></div>
+        <div class="part-side"><p class="part-time">≈ 1:48</p><button class="copy" type="button">Скопировать текст</button></div>
+      </div>
+      <div class="cues">
+        <article class="cue" data-slide="6">
+          <div class="cue-side"><p class="cue-no">Слайд 6</p><p class="cue-title">Цепочка ценностей Cofix</p><p class="cue-tip">Сначала нижний тёмный ряд, потом четыре полосы сверху, в конце зелёный треугольник.</p></div>
+          <div class="text">
+            <p>Чтобы разобрать деятельность компании, мы построили цепочку ценностей Майкла Портера.</p>
+            <p>Внизу <b>пять основных процессов</b>: они создают продукт и доводят его до покупателя. Сверху <b>четыре вспомогательных</b> процесса, которые обеспечивают работу основных. Справа маржа, то есть разница между тем, сколько клиент готов заплатить, и затратами компании.</p>
+          </div>
+        </article>
+        <article class="cue" data-slide="7">
+          <div class="cue-side"><p class="cue-no">Слайд 7</p><p class="cue-title">Основные процессы: путь чашки</p><p class="cue-tip">Проведите по шагам слева направо, как по пути чашки. Выделите фразу внизу со значком лампочки.</p></div>
+          <div class="text">
+            <p>Основные процессы удобно представить как путь чашки кофе.</p>
+            <p>Первый — обеспечение поставок сырья. Зелёное зерно от импортёров обжаривают в своём цехе, а выпечку привозят с фабрики-кухни. Второй — выпуск продукции: бариста готовят напитки по единым техкартам, поэтому вкус одинаковый в любой кофейне. Третий — обеспечение сбыта: это 285 кофеен, часть из них работает у франчайзи.</p>
+            <p>Четвёртый — маркетинг и продажи: доступные цены, акции, сезонные напитки, коллаборации с брендами. Пятый — послепродажное обслуживание: бонусы и статистика в приложении, ответы на отзывы и жалобы.</p>
+            <p>Главное звено здесь — <b>своя обжарка</b>. Зерно идёт от импортёра в кофейню без посредников, и чашка обходится дешевле.</p>
+          </div>
+        </article>
+        <article class="cue" data-slide="8">
+          <div class="cue-side"><p class="cue-no">Слайд 8</p><p class="cue-title">Вспомогательные процессы</p><p class="cue-tip">Четыре карточки, по одной фразе на каждую.</p></div>
+          <div class="text">
+            <p>Вспомогательных процессов четыре. Снабжение — это централизованные закупки: зерно у крупных импортёров, молоко, сиропы, упаковка и оборудование. Развитие технологий — свой обжарочный цех и фабрика-кухня, приложение лояльности, касса iiko и оплата по QR.</p>
+            <p>Управление персоналом — найм и обучение бариста, единые стандарты сервиса и поддержка франчайзи. Инфраструктура — управляющая компания, юристы, IT и развитие франшизы.</p>
+            <p>Сами эти процессы кофе не продают. Но без закупок, технологий и людей основные процессы остановятся.</p>
+            <p class="pass"><mark>Первый основной процесс, поставки сырья, мы разобрали подробно. Об этом расскажет <span class="nm" data-sp="4">Женя</span>.</mark></p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Спикер 4 -->
+    <section class="part" data-sp="4" aria-labelledby="pn-4">
+      <div class="part-head">
+        <p class="part-num" aria-hidden="true">4</p>
+        <div class="part-id"><h2 class="part-name nm" id="pn-4" data-sp="4">Женя</h2><p class="part-scope">Слайды 9–10 · декомпозиция процесса «Поставки зерна»</p></div>
+        <div class="part-side"><p class="part-time">≈ 1:54</p><button class="copy" type="button">Скопировать текст</button></div>
+      </div>
+      <div class="cues">
+        <article class="cue" data-slide="9">
+          <div class="cue-side"><p class="cue-no">Слайд 9</p><p class="cue-title">Поставки зерна: входы</p><p class="cue-tip">Не читайте всю таблицу. Покажите строку с названиями процедур, потом первые две колонки.</p></div>
+          <div class="text">
+            <p>Для декомпозиции мы выбрали процесс «Обеспечение поставок сырья», а точнее путь зерна от импортёра до кофейни. Мы разделили его на <b>пять процедур</b>: планирование потребности, закупка зелёного зерна, приёмка и контроль, обжарка и упаковка, доставка в кофейни.</p>
+            <p>Таблица получилась большой, поэтому мы разбили её на два слайда. На этом слайде входы, поставщики, требования к входу и выходы.</p>
+            <p>Возьмём для примера первые процедуры. Планирование начинается с заявок кофеен и остатков на складе. Заявки присылают управляющие кофеен раз в неделю, до пятницы, а на выходе получается план закупки на месяц. Этот план становится входом для закупки. Требование к нему — состав бленда: <b>80% арабики и 20% робусты</b>. Дальше импортёры, например Olam и KLD, привозят партию, и на приёмке проверяют документы, упаковку и сроки.</p>
+          </div>
+        </article>
+        <article class="cue" data-slide="10">
+          <div class="cue-side"><p class="cue-no">Слайд 10</p><p class="cue-title">Поставки зерна: выходы и контроль</p><p class="cue-tip">Ведите по строке «Клиент» слева направо, потом покажите на нижнюю строку «Показатель».</p></div>
+          <div class="text">
+            <p>На втором слайде клиенты, требования к выходу, ответственные и показатели.</p>
+            <p>Выход каждой процедуры становится входом следующей. План нужен менеджеру по закупкам, поставка приходит на склад обжарочного цеха, принятая партия уходит в обжарку, а готовое зерно через склад и логистику попадает к бариста. Перед обжаркой партия должна пройти каппинг, то есть профессиональную дегустацию.</p>
+            <p>За каждую процедуру отвечает конкретный человек: от менеджера по планированию до логиста и водителя-экспедитора. И у каждой есть показатель: точность прогноза, цена за килограмм, доля забракованных партий, выход продукции в тоннах в месяц и доля поставок вовремя.</p>
+            <p>Нормативы по срокам мы задали <b>условно</b>, потому что внутренние данные компания не публикует.</p>
+            <p class="pass"><mark>Четвёртую процедуру, обжарку, в нотации IDEF0 покажет <span class="nm" data-sp="5">Маша</span>.</mark></p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Спикер 5 -->
+    <section class="part" data-sp="5" aria-labelledby="pn-5">
+      <div class="part-head">
+        <p class="part-num" aria-hidden="true">5</p>
+        <div class="part-id"><h2 class="part-name nm" id="pn-5" data-sp="5">Маша</h2><p class="part-scope">Слайды 11–12 · IDEF0, выводы и вопросы</p></div>
+        <div class="part-side"><p class="part-time">≈ 1:10</p><button class="copy" type="button">Скопировать текст</button></div>
+      </div>
+      <div class="cues">
+        <article class="cue" data-slide="11">
+          <div class="cue-side"><p class="cue-no">Слайд 11</p><p class="cue-title">IDEF0: «Обжарить зерно»</p><p class="cue-tip">Показывайте стрелки в порядке рассказа: слева, справа, сверху, снизу.</p></div>
+          <div class="text">
+            <p>Процедуру «Обжарить зерно» мы описали в нотации IDEF0. В центре сама функция, её номер <b>A4</b>, потому что это четвёртая процедура процесса.</p>
+            <p><b>Слева входы</b>, то есть то, что превращается в результат: зелёное зерно, пакеты с клапаном и заявка на объём. <b>Справа выходы</b>: обжаренное зерно в упаковке и отходы — шелуха и брак.</p>
+            <p><b>Сверху управление.</b> Это правила, по которым идёт работа: профиль обжарки, рецептура бленда, нормы качества и безопасности. <b>Снизу механизмы</b>, то есть кто и с помощью чего выполняет работу: обжарщик, ростер для обжарки и сам обжарочный цех.</p>
+          </div>
+        </article>
+        <article class="cue" data-slide="12">
+          <div class="cue-side"><p class="cue-no">Слайд 12</p><p class="cue-title">Итоги анализа</p><p class="cue-tip">После «Спасибо» не переключайте слайд: вопросы принимаем на нём.</p></div>
+          <div class="text">
+            <p>Подведём итоги.</p>
+            <p>Первое. Cofix — крупное международное предприятие: 285 кофеен в России и 3,01 миллиарда рублей выручки за 2025 год.</p>
+            <p>Второе. Ценность создаёт короткая цепочка поставок: своя обжарка и фабрика-кухня держат цену чашки низкой.</p>
+            <p>Третье. Процесс поставок зерна прозрачен: у каждой процедуры есть вход, выход, ответственный и показатель.</p>
+            <p class="pass"><mark>Спасибо за внимание! Мы готовы ответить на ваши вопросы.</mark></p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Вопросы -->
+    <section class="qa-sec" aria-labelledby="qa-title">
+      <h2 id="qa-title">Вопросы комиссии</h2>
+      <p class="qa-lead">Вопросы, которые могут задать после выступления, и короткие ответы. Вопрос принимает <span class="nm" data-sp="5">Маша</span> и передаёт тому, кто рассказывал эту часть.</p>
+      <div class="qa">
+        <div class="qa-card" data-sp="4"><p class="q">Почему для декомпозиции выбран процесс поставок зерна?</p><p class="a">Это первое звено цепочки: от него зависит себестоимость каждой чашки, а значит, и низкая цена. Кроме того, у процесса понятные входы и выходы, его удобно разложить на процедуры.</p><p class="who">Отвечает: <span class="nm" data-sp="4">Женя</span></p></div>
+        <div class="qa-card" data-sp="3"><p class="q">Чем основные процессы отличаются от вспомогательных?</p><p class="a">Основные создают продукт и доводят его до клиента, за их результат клиент и платит. Вспомогательные обеспечивают работу основных: закупки, технологии, персонал и управление.</p><p class="who">Отвечает: <span class="nm" data-sp="3">Вика</span></p></div>
+        <div class="qa-card" data-sp="2"><p class="q">По какому признаку Cofix — крупное предприятие?</p><p class="a">По выручке. Для среднего бизнеса в России предел — 2 миллиарда рублей в год, а у ООО «Урбан Кофикс Раша» за 2025 год 3,01 миллиарда. Масштаб видно и по сети: 285 кофеен в России и больше 400 в мире.</p><p class="who">Отвечает: <span class="nm" data-sp="2">Алсу Б</span></p></div>
+        <div class="qa-card" data-sp="4"><p class="q">Что такое каппинг?</p><p class="a">Профессиональная дегустация кофе по единой методике: оценивают аромат, вкус и дефекты зерна. Партия, которая не прошла каппинг, в обжарку не идёт.</p><p class="who">Отвечает: <span class="nm" data-sp="4">Женя</span></p></div>
+        <div class="qa-card" data-sp="5"><p class="q">Чем управление в IDEF0 отличается от входа?</p><p class="a">Вход в ходе работы превращается в выход: зелёное зерно становится обжаренным. Управление не расходуется. Это правила и нормы, по которым идёт работа, например профиль обжарки.</p><p class="who">Отвечает: <span class="nm" data-sp="5">Маша</span></p></div>
+        <div class="qa-card" data-sp="1"><p class="q">Почему Cofix отказался от единой цены?</p><p class="a">Мы связываем это с ростом затрат: в 2024–2025 годах кофейное зерно на мировом рынке сильно подорожало. К тому же при одной цене трудно расширять меню, например добавить пекарню.</p><p class="who">Отвечает: <span class="nm" data-sp="1">Алсу Л</span></p></div>
+        <div class="qa-card" data-sp="3"><p class="q">Франчайзинг — основной процесс или вспомогательный?</p><p class="a">И то и другое. Продажи через франчайзи — канал сбыта, поэтому они входят в основной процесс «Обеспечение сбыта». А развитие франшизы и поддержка франчайзи относятся к вспомогательным процессам: инфраструктуре и управлению персоналом.</p><p class="who">Отвечает: <span class="nm" data-sp="3">Вика</span></p></div>
+        <div class="qa-card" data-sp="5"><p class="q">Откуда взяты данные?</p><p class="a">Из открытых источников: Retail.ru, журнал «Профиль», New Retail. Ссылки есть на последнем слайде. Нормативы по срокам в таблице процесса — наше условное допущение.</p><p class="who">Отвечает: <span class="nm" data-sp="5">Маша</span></p></div>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <p>Слайд 13 «Источники» не озвучивается. Его открывают, если комиссия спросит, откуда данные.</p>
+      <p>Время посчитано по темпу 120 слов в минуту. Если на репетиции выходит больше 10 минут, сокращайте примеры на слайдах 9 и 10.</p>
+    </footer>
+  </div>
+</main>
+
+<div class="deck" id="deck" hidden role="dialog" aria-modal="true" aria-labelledby="deckWho">
+  <div class="deck-bar">
+    <p class="deck-who" id="deckWho">Спикер 1</p>
+    <p class="deck-clock" aria-live="off"><span id="deckElapsed">0:00</span> <span>из <span id="deckPlan">≈ 8:16</span></span></p>
+    <button class="dbtn" type="button" id="deckRestart">Заново</button>
+    <button class="dbtn" type="button" id="deckClose">Закрыть</button>
+  </div>
+  <div class="deck-main">
+    <div class="deck-inner">
+      <p class="deck-slide" id="deckSlide">Слайд 1</p>
+      <div class="deck-text" id="deckText"></div>
+      <p class="deck-tip" id="deckTip"></p>
+    </div>
+  </div>
+  <div class="deck-nav">
+    <button class="btn btn-ghost" type="button" id="deckPrev">Назад</button>
+    <p class="deck-pos" id="deckPos">1 / 12</p>
+    <button class="btn btn-lime" type="button" id="deckNext">Дальше</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const WPM = 120;
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  const parts = $$('.part');
+  const segs = $$('.seg');
+  const qaCards = $$('.qa-card');
+
+  const fmt = sec => { const s = Math.round(sec); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  const countWords = el => el.textContent.split(/\s+/).filter(w => /[\p{L}\p{N}]/u.test(w)).length;
+
+  // Хронометраж по числу слов
+  const secs = {};
+  let total = 0;
+  parts.forEach(p => {
+    const s = $$(`.part[data-sp="${p.dataset.sp}"] .text`).reduce((a, t) => a + countWords(t), 0) / WPM * 60;
+    secs[p.dataset.sp] = s;
+    total += s;
+    p.querySelector('.part-time').textContent = '≈ ' + fmt(s);
+  });
+  segs.forEach(b => {
+    const s = secs[b.dataset.sp] || 60;
+    b.style.flexGrow = String(Math.round(s));
+    b.querySelector('.seg-t').textContent = fmt(s);
+  });
+  $('#total').textContent = '≈ ' + fmt(total);
+
+  // Одна часть или всё выступление
+  let current = 0;
+  const show = n => {
+    current = n;
+    parts.forEach(p => { p.hidden = !!n && +p.dataset.sp !== n; });
+    segs.forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.sp === n)));
+    qaCards.forEach(c => c.classList.toggle('mine', !!n && +c.dataset.sp === n));
+    $('#hint').hidden = !!n;
+    $('#filterNote').hidden = !n;
+  };
+  const fromHash = () => { const m = /^#speaker-([1-5])$/.exec(location.hash); show(m ? +m[1] : 0); };
+  const showAll = () => {
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { location.hash = 'all'; }
+    show(0);
+  };
+  segs.forEach(b => b.addEventListener('click', () => {
+    const n = +b.dataset.sp;
+    if (current === n) showAll(); else location.hash = 'speaker-' + n;
+  }));
+  $('#showAll').addEventListener('click', showAll);
+  window.addEventListener('hashchange', fromHash);
+  fromHash();
+
+  // Копирование текста своей части
+  $$('.copy').forEach(btn => btn.addEventListener('click', () => {
+    const part = btn.closest('.part');
+    const label = btn.dataset.label || (btn.dataset.label = btn.textContent);
+    const clean = el => el.textContent.replace(/\s+/g, ' ').trim();
+    const head = clean(part.querySelector('.part-name')) + '. ' + clean(part.querySelector('.part-scope'));
+    const body = [...part.querySelectorAll('.cue')].map(c =>
+      `Слайд ${c.dataset.slide}. ${clean(c.querySelector('.cue-title'))}\n\n` +
+      [...c.querySelectorAll('.text p')].map(clean).join('\n\n')
+    ).join('\n\n\n');
+    const done = msg => { btn.textContent = msg; setTimeout(() => { btn.textContent = label; }, 2600); };
+    const fallback = () => {
+      try {
+        const r = document.createRange();
+        r.selectNodeContents(part.querySelector('.cues'));
+        const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+        done('Текст выделен, скопируйте его');
+      } catch (e) { done('Не получилось, выделите текст вручную'); }
+    };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(head + '\n\n' + body).then(() => done('Скопировано'), fallback);
+      else fallback();
+    } catch (e) { fallback(); }
+  }));
+
+  // Карточки для репетиции
+  const deck = $('#deck');
+  let cards = [], idx = 0, started = 0, tick = 0, lock = null, opener = null;
+  const requestLock = () => {
+    try { if ('wakeLock' in navigator) navigator.wakeLock.request('screen').then(l => { lock = l; }, () => {}); } catch (e) {}
+  };
+  const updClock = () => { $('#deckElapsed').textContent = fmt((Date.now() - started) / 1000); };
+  const render = () => {
+    const c = cards[idx];
+    const part = c.closest('.part');
+    $('#deckWho').textContent = `${part.querySelector('.part-name').textContent} · часть ${part.dataset.sp} из 5`;
+    $('#deckSlide').textContent = `Слайд ${c.dataset.slide} · ${c.querySelector('.cue-title').textContent}`;
+    $('#deckText').replaceChildren(...[...c.querySelector('.text').children].map(n => n.cloneNode(true)));
+    const tip = c.querySelector('.cue-tip');
+    $('#deckTip').textContent = tip ? 'Подсказка: ' + tip.textContent : '';
+    $('#deckPos').textContent = `${idx + 1} / ${cards.length}`;
+    $('#deckPrev').disabled = idx === 0;
+    $('#deckNext').textContent = idx === cards.length - 1 ? 'Готово' : 'Дальше';
+    $('.deck-main').scrollTop = 0;
+  };
+  const openDeck = () => {
+    cards = $$('.part:not([hidden]) .cue');
+    if (!cards.length) return;
+    opener = document.activeElement;
+    const plan = parts.filter(p => !p.hidden).reduce((a, p) => a + secs[p.dataset.sp], 0);
+    $('#deckPlan').textContent = '≈ ' + fmt(plan);
+    idx = 0; started = Date.now();
+    render(); updClock();
+    clearInterval(tick); tick = setInterval(updClock, 500);
+    deck.hidden = false;
+    document.body.style.overflow = 'hidden';
+    requestLock();
+    $('#deckNext').focus();
+  };
+  const closeDeck = () => {
+    clearInterval(tick);
+    deck.hidden = true;
+    document.body.style.overflow = '';
+    try { if (lock) lock.release(); } catch (e) {}
+    lock = null;
+    if (opener && opener.focus) opener.focus();
+  };
+  const go = d => {
+    if (d > 0 && idx === cards.length - 1) { closeDeck(); return; }
+    idx = Math.max(0, Math.min(cards.length - 1, idx + d));
+    render();
+  };
+  $('#openDeck').addEventListener('click', openDeck);
+  $('#deckClose').addEventListener('click', closeDeck);
+  $('#deckPrev').addEventListener('click', () => go(-1));
+  $('#deckNext').addEventListener('click', () => go(1));
+  $('#deckRestart').addEventListener('click', () => { idx = 0; started = Date.now(); render(); updClock(); });
+  document.addEventListener('keydown', e => {
+    if (deck.hidden) return;
+    if (e.key === 'Escape') { e.preventDefault(); closeDeck(); }
+    else if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); go(1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(-1); }
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (!deck.hidden && document.visibilityState === 'visible') requestLock();
+  });
+})();
+</script>
+</body>
+</html>
